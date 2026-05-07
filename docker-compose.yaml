@@ -3,21 +3,16 @@ services:
     build: .
     container_name: namenode
     hostname: namenode
-    env_file: ./hadoop.env
     ports:
       - "9870:9870"
       - "9000:9000"
     volumes:
       - hadoop_namenode:/hadoop/dfs/name
-      - ./core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
-      - ./yarn-site.xml:/opt/hadoop/etc/hadoop/yarn-site.xml
-      - ./hive-site.xml:/opt/hadoop/etc/hadoop/hive-site.xml
 
   datanode:
     build: .
     container_name: datanode
     hostname: datanode
-    env_file: ./hadoop.env
     depends_on:
       - namenode
     volumes:
@@ -27,29 +22,26 @@ services:
     build: .
     container_name: resourcemanager
     hostname: resourcemanager
-    env_file: ./hadoop.env
     ports:
       - "8088:8088"
     depends_on:
       - namenode
 
-  hive-server:
-    build: .
-    container_name: hive-server
-    env_file: ./hadoop.env
-    ports:
-      - "10000:10000"
-    volumes:
-      - ./postgresql-jdbc.jar:/opt/hadoop/share/hadoop/common/lib/postgresql-jdbc.jar
-    depends_on:
-      - hive-metastore
-
   hive-metastore:
     build: .
     container_name: hive-metastore
-    env_file: ./hadoop.env
+    command: /opt/hive/bin/hive --service metastore
     depends_on:
       - hive-metastore-postgresql
+
+  hive-server:
+    build: .
+    container_name: hive-server
+    ports:
+      - "10000:10000"
+    command: /opt/hive/bin/hive --service hiveserver2
+    depends_on:
+      - hive-metastore
 
   hive-metastore-postgresql:
     image: postgres:15-alpine
