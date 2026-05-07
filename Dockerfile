@@ -37,6 +37,7 @@ RUN rm $HIVE_HOME/lib/log4j-slf4j-impl-*.jar
 ENV HADOOP_CLASSPATH=$TEZ_HOME/*:$TEZ_HOME/lib/*:$HIVE_HOME/lib/*:$HADOOP_HOME/etc/hadoop
 
 COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+COPY entrypoint.sh /entrypoint.sh
+RUN sed -i 's/\r//' /entrypoint.sh && chmod +x /entrypoint.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
