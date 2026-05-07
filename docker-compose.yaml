@@ -50,7 +50,8 @@ services:
       POSTGRES_DB: metastore
       POSTGRES_USER: hive
       POSTGRES_PASSWORD: hive
-
+      POSTGRES_HOST_AUTH_METHOD: md5
+      
 volumes:
   hadoop_namenode:
   hadoop_datanode:
