@@ -1,33 +1,50 @@
 FROM ubuntu:24.04
 
-# Éviter les interactions lors de l'installation
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Installation des dépendances
+# Installation des dépendances système
 RUN apt-get update && apt-get install -y \
     openjdk-11-jdk wget curl ssh pdsh python3 \
     && rm -rf /var/lib/apt/lists/*
 
-# Variables d'environnement globales
+# Variables d'environnement
 ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
 ENV HADOOP_HOME=/opt/hadoop
 ENV TEZ_HOME=/opt/tez
-ENV PATH=$PATH:$HADOOP_HOME/bin:$HADOOP_HOME/sbin:$TEZ_HOME/bin
+ENV HIVE_HOME=/opt/hive
+ENV PATH=$PATH:$HADOOP_HOME/bin:$HADOOP_HOME/sbin:$TEZ_HOME/bin:$HIVE_HOME/bin
 
-# 1. Récupération de Hadoop 3.4.2
-RUN wget https://downloads.apache.org/hadoop/common/hadoop-3.4.2/hadoop-3.4.2.tar.gz && \
+# 1. Hadoop 3.4.2
+RUN wget https://archive.apache.org/dist/hadoop/common/hadoop-3.4.2/hadoop-3.4.2.tar.gz && \
     tar -xzvf hadoop-3.4.2.tar.gz -C /opt/ && \
-    mv /opt/hadoop-3.4.2 $HADOOP_HOME && \
-    rm hadoop-3.4.2.tar.gz
+    mv /opt/hadoop-3.4.2 $HADOOP_HOME && rm hadoop-3.4.2.tar.gz
 
-# 2. Récupération de Tez 0.10.2 (version stable pour Hadoop 3)
+# 2. Tez 0.10.2
 RUN wget https://archive.apache.org/dist/tez/0.10.2/apache-tez-0.10.2-bin.tar.gz && \
     tar -xzvf apache-tez-0.10.2-bin.tar.gz -C /opt/ && \
-    mv /opt/apache-tez-0.10.2-bin $TEZ_HOME && \
-    rm apache-tez-0.10.2-bin.tar.gz
+    mv /opt/apache-tez-0.10.2-bin $TEZ_HOME && rm apache-tez-0.10.2-bin.tar.gz
 
-# Configuration du Classpath pour inclure Tez
-ENV HADOOP_CLASSPATH=$TEZ_HOME/*:$TEZ_HOME/lib/*:$HADOOP_HOME/etc/hadoop
+# 3. Hive 3.1.3
+RUN wget https://archive.apache.org/dist/hive/hive-3.1.3/apache-hive-3.1.3-bin.tar.gz && \
+    tar -xzvf apache-hive-3.1.3-bin.tar.gz -C /opt/ && \
+    mv /opt/apache-hive-3.1.3-bin $HIVE_HOME && rm apache-hive-3.1.3-bin.tar.gz
+
+# --- CORRECTIFS CRITIQUES HIVE/HADOOP ---
+# Supprimer la log4j de Hive qui entre en conflit avec Hadoop 3
+RUN rm $HIVE_HOME/lib/log4j-slf4j-impl-*.jar
+
+# Intégration du driver JDBC pour Postgres
+COPY configs/postgresql-jdbc.jar $HIVE_HOME/lib/
+COPY configs/postgresql-jdbc.jar $HADOOP_HOME/share/hadoop/common/lib/
+
+# Intégration des configurations (Évite les erreurs de montage Docker)
+COPY configs/core-site.xml $HADOOP_HOME/etc/hadoop/
+COPY configs/yarn-site.xml $HADOOP_HOME/etc/hadoop/
+COPY configs/log4j.properties $HADOOP_HOME/etc/hadoop/
+COPY configs/hive-site.xml $HIVE_HOME/conf/
+
+# Configuration du Classpath pour Tez
+ENV HADOOP_CLASSPATH=$TEZ_HOME/*:$TEZ_HOME/lib/*:$HIVE_HOME/lib/*:$HADOOP_HOME/etc/hadoop
 
 WORKDIR $HADOOP_HOME
 COPY entrypoint.sh /entrypoint.sh
