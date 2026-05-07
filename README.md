@@ -20,9 +20,19 @@ Ce fichier démarre un cluster destiné à faire des expérimentations sur des m
 
 ##### Sous Linux
 ```sh
-sudo docker compose -f docker-compose.yaml up -d
+docker compose -f docker-compose.yaml up -d
 ```
+
+```sh
+docker ps -a
+```
+
+##### On initialise le schema pour Hive
+```sh
+docker exec -it hive-metastore /opt/hive/bin/schematool -dbType postgres -initSchema
+```
+
 ##### Après quelques minutes : on vérifie le niveau de consommation des ressources 
 ```sh
-sudo docker stats
+docker stats
 ```
