@@ -1,1 +1,28 @@
 Projet 2026 
+________________________________________________________________________________________________
+## Exécution_cluster_Big_Data
+Pour démarrer le cluster, exécutez les commandes suivantes depuis le répertoire du projet :
+
+##### Sous Linux : clonage du projet : 
+```sh
+cd ~
+sudo rm -Rf hadoop-2026
+
+git clone https://github.com/crystalloide/hadoop-2026
+
+cd hadoop-2026
+
+```
+
+### Pour les étudiants (IMT, ...) : Démarrer le cluster minimal avec les composants : 
+##### HDFS MR HIVE PIG SQOOP ZEPPELIN HUE IMPALA OOZIE AIRFLOW ZOOKEEPER POSTGRESQL
+Ce fichier démarre un cluster destiné à faire des expérimentations sur des machines limitées en ressource. 
+
+##### Sous Linux
+```sh
+sudo docker compose -f docker-compose.yaml up -d
+```
+##### Après quelques minutes : on vérifie le niveau de consommation des ressources 
+```sh
+sudo docker stats
+```
